@@ -1,0 +1,32 @@
+name: mensajeria
+
+services:
+  api:
+    build:
+      context: .
+      target: final
+    ports:
+      - "${PUERTO:-8080}:8080"
+    environment:
+      # Development: activa los usuarios de prueba (Alice/Bob) y la clave JWT de appsettings.Development.json
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Mensajeria: Data Source=/datos/mensajeria.db
+      # Para usar tu propia clave JWT (mínimo 32 caracteres), descomenta:
+      # Jwt__Clave: ${JWT_CLAVE}
+      # Solo para la demo de migraciones (run/demo-migraciones.sh):
+      BaseDeDatos__MigrarHasta: ${MIGRAR_HASTA:-}
+    volumes:
+      - datos:/datos
+    restart: unless-stopped
+
+  # Se ejecuta con: docker compose --profile pruebas run --rm pruebas   (o run/probar.sh)
+  pruebas:
+    profiles: ["pruebas"]
+    build:
+      context: .
+      target: pruebas
+    volumes:
+      - ../../bin:/salida
+
+volumes:
+  datos:
