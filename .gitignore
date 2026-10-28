@@ -1,0 +1,18 @@
+# Salida de compilación de .NET
+**/obj/
+src/**/bin/
+
+# Carpeta "bin/" de la raíz: salida (resultados de pruebas, etc.), no se versiona su contenido
+/bin/*
+!/bin/.gitkeep
+
+# Bases de datos SQLite locales
+*.db
+*.db-shm
+*.db-wal
+
+# IDEs
+.vs/
+.idea/
+.vscode/
+*.user
