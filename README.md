@@ -13,7 +13,7 @@ src/back/     la API (Mensajeria.Api), sus pruebas (Mensajeria.Pruebas), Dockerf
 src/front/    (pendiente)
 ```
 
-Dentro de `src/back/Mensajeria.Api`: `Modelos/` (Usuario, Buzon, Mensaje) · `Datos/` (DbContext y datos de prueba) · `Servicios/` (lógica de negocio) · `Controllers/` · `Dtos/` · `Utilidades/` · `Migrations/` · `Program.cs` (registro de dependencias y arranque).
+Dentro de `src/back/Mensajeria.Api`: `Modelos/` (Usuario, Buzon, Mensaje) · `Datos/` (DbContext y datos de prueba) · `Servicios/` (lógica de negocio, devuelven entidades) · `Controllers/` · `Dtos/` · `Mapeos/` (entidad → DTO) · `Utilidades/` · `Migrations/` · `Program.cs` (registro de dependencias y arranque).
 
 ## Comandos
 

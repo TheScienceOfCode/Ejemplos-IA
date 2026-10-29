@@ -1,6 +1,4 @@
-using System.Linq.Expressions;
 using Mensajeria.Api.Datos;
-using Mensajeria.Api.Dtos;
 using Mensajeria.Api.Modelos;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +7,7 @@ namespace Mensajeria.Api.Servicios;
 /// <summary>
 /// Lógica de mensajería. Todos los métodos reciben el Id del usuario autenticado
 /// (sacado del token) para comprobar que solo se accede a lo que le pertenece.
+/// Devuelve entidades; convertirlas a DTO es trabajo de los controladores (ver Mapeos/).
 /// </summary>
 public class ServicioMensajes : IServicioMensajes
 {
@@ -19,21 +18,9 @@ public class ServicioMensajes : IServicioMensajes
         _db = db;
     }
 
-    // Cómo convertir un Mensaje (entidad) en MensajeRespuesta (DTO). EF lo traduce a SQL.
-    private static readonly Expression<Func<Mensaje, MensajeRespuesta>> ADto = m => new MensajeRespuesta
+    public async Task<Mensaje?> EnviarAsync(int remitenteId, string destinatarioNombreUsuario, string asunto, string contenido)
     {
-        Id = m.Id,
-        Remitente = m.Remitente.NombreUsuario,
-        Destinatario = m.Buzon.Usuario.NombreUsuario,
-        Asunto = m.Asunto,
-        Contenido = m.Contenido,
-        EstaLeido = m.EstaLeido,
-        CreadoEn = m.CreadoEn
-    };
-
-    public async Task<MensajeRespuesta?> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud)
-    {
-        var nombreDestino = solicitud.DestinatarioNombreUsuario.Trim();
+        var nombreDestino = destinatarioNombreUsuario.Trim();
 
         var buzonDestino = await _db.Buzones.FirstOrDefaultAsync(b => b.Usuario.NombreUsuario == nombreDestino);
         if (buzonDestino is null) return null;
@@ -42,71 +29,57 @@ public class ServicioMensajes : IServicioMensajes
         {
             RemitenteId = remitenteId,
             BuzonId = buzonDestino.Id,
-            Asunto = solicitud.Asunto.Trim(),
-            Contenido = solicitud.Contenido
+            Asunto = asunto.Trim(),
+            Contenido = contenido
         };
         _db.Mensajes.Add(mensaje);
         await _db.SaveChangesAsync();
 
-        return await _db.Mensajes.Where(m => m.Id == mensaje.Id).Select(ADto).SingleAsync();
+        return await ConMensajesCompletos().FirstAsync(m => m.Id == mensaje.Id);
     }
 
-    public async Task<BuzonRespuesta> ObtenerBuzonPorUsuarioIdAsync(int usuarioId)
+    public async Task<Buzon> ObtenerBuzonPorUsuarioIdAsync(int usuarioId)
     {
-        var buzon = await _db.Buzones.FirstAsync(b => b.UsuarioId == usuarioId);
-        return await ConstruirBuzonAsync(buzon.Id);
+        return await _db.Buzones
+            .Include(b => b.Usuario)
+            .Include(b => b.MensajesRecibidos.OrderByDescending(m => m.CreadoEn).ThenByDescending(m => m.Id))
+                .ThenInclude(m => m.Remitente)
+            .FirstAsync(b => b.UsuarioId == usuarioId);
     }
 
-    public async Task<List<MensajeRespuesta>> ObtenerEnviadosAsync(int usuarioId)
+    public async Task<List<Mensaje>> ObtenerEnviadosAsync(int usuarioId)
     {
-        return await _db.Mensajes
+        return await ConMensajesCompletos()
             .Where(m => m.RemitenteId == usuarioId)
             .OrderByDescending(m => m.CreadoEn).ThenByDescending(m => m.Id)
-            .Select(ADto)
             .ToListAsync();
     }
 
-    public async Task<MensajeRespuesta?> ObtenerMensajeAsync(int mensajeId, int usuarioId)
+    public async Task<Mensaje?> ObtenerMensajeAsync(int mensajeId, int usuarioId)
     {
         // Solo pueden verlo quien lo envió y quien lo recibió
-        return await _db.Mensajes
-            .Where(m => m.Id == mensajeId && (m.RemitenteId == usuarioId || m.Buzon.UsuarioId == usuarioId))
-            .Select(ADto)
-            .FirstOrDefaultAsync();
+        return await ConMensajesCompletos()
+            .FirstOrDefaultAsync(m => m.Id == mensajeId && (m.RemitenteId == usuarioId || m.Buzon.UsuarioId == usuarioId));
     }
 
-    public async Task<MensajeRespuesta?> MarcarComoLeidoAsync(int mensajeId, int usuarioId)
+    public async Task<Mensaje?> MarcarComoLeidoAsync(int mensajeId, int usuarioId)
     {
         // Solo el DESTINATARIO puede marcarlo como leído (ni siquiera el remitente)
-        var mensaje = await _db.Mensajes
+        var mensaje = await ConMensajesCompletos()
             .FirstOrDefaultAsync(m => m.Id == mensajeId && m.Buzon.UsuarioId == usuarioId);
         if (mensaje is null) return null;
 
         mensaje.EstaLeido = true;
         await _db.SaveChangesAsync();
 
-        return await _db.Mensajes.Where(m => m.Id == mensajeId).Select(ADto).SingleAsync();
+        return mensaje;
     }
 
-    private async Task<BuzonRespuesta> ConstruirBuzonAsync(int buzonId)
+    /// <summary>Consulta de mensajes con el remitente y el destinatario ya cargados.</summary>
+    private IQueryable<Mensaje> ConMensajesCompletos()
     {
-        var propietario = await _db.Buzones
-            .Where(b => b.Id == buzonId)
-            .Select(b => b.Usuario.NombreUsuario)
-            .SingleAsync();
-
-        var mensajes = await _db.Mensajes
-            .Where(m => m.BuzonId == buzonId)
-            .OrderByDescending(m => m.CreadoEn).ThenByDescending(m => m.Id)
-            .Select(ADto)
-            .ToListAsync();
-
-        return new BuzonRespuesta
-        {
-            BuzonId = buzonId,
-            Propietario = propietario,
-            NoLeidos = mensajes.Count(m => !m.EstaLeido),
-            Mensajes = mensajes
-        };
+        return _db.Mensajes
+            .Include(m => m.Remitente)
+            .Include(m => m.Buzon).ThenInclude(b => b.Usuario);
     }
 }

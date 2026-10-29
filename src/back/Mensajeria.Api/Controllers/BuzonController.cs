@@ -1,4 +1,5 @@
 using Mensajeria.Api.Dtos;
+using Mensajeria.Api.Mapeos;
 using Mensajeria.Api.Servicios;
 using Mensajeria.Api.Utilidades;
 using Microsoft.AspNetCore.Authorization;
@@ -28,6 +29,7 @@ public class BuzonController : ControllerBase
         var usuarioId = User.ObtenerId();
         if (usuarioId is null) return Unauthorized();
 
-        return Ok(await _mensajes.ObtenerBuzonPorUsuarioIdAsync(usuarioId.Value));
+        var buzon = await _mensajes.ObtenerBuzonPorUsuarioIdAsync(usuarioId.Value);
+        return Ok(MapeoBuzon.MapearA(buzon));
     }
 }

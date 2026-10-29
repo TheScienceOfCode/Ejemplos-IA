@@ -1,4 +1,4 @@
-using Mensajeria.Api.Dtos;
+using Mensajeria.Api.Modelos;
 
 namespace Mensajeria.Api.Servicios;
 
@@ -8,9 +8,9 @@ namespace Mensajeria.Api.Servicios;
 /// </summary>
 public interface IServicioMensajes
 {
-    Task<MensajeRespuesta?> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud);
-    Task<BuzonRespuesta> ObtenerBuzonPorUsuarioIdAsync(int usuarioId);
-    Task<List<MensajeRespuesta>> ObtenerEnviadosAsync(int usuarioId);
-    Task<MensajeRespuesta?> ObtenerMensajeAsync(int mensajeId, int usuarioId);
-    Task<MensajeRespuesta?> MarcarComoLeidoAsync(int mensajeId, int usuarioId);
+    Task<Mensaje?> EnviarAsync(int remitenteId, string destinatarioNombreUsuario, string asunto, string contenido);
+    Task<Buzon> ObtenerBuzonPorUsuarioIdAsync(int usuarioId);
+    Task<List<Mensaje>> ObtenerEnviadosAsync(int usuarioId);
+    Task<Mensaje?> ObtenerMensajeAsync(int mensajeId, int usuarioId);
+    Task<Mensaje?> MarcarComoLeidoAsync(int mensajeId, int usuarioId);
 }

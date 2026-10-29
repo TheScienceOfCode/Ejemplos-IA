@@ -1,4 +1,5 @@
 using Mensajeria.Api.Dtos;
+using Mensajeria.Api.Mapeos;
 using Mensajeria.Api.Servicios;
 using Mensajeria.Api.Utilidades;
 using Microsoft.AspNetCore.Authorization;
@@ -30,10 +31,10 @@ public class MensajesController : ControllerBase
         var usuarioId = User.ObtenerId();
         if (usuarioId is null) return Unauthorized();
 
-        var mensaje = await _mensajes.EnviarAsync(usuarioId.Value, solicitud);
+        var mensaje = await _mensajes.EnviarAsync(usuarioId.Value, solicitud.DestinatarioNombreUsuario, solicitud.Asunto, solicitud.Contenido);
         if (mensaje is null) return NotFound($"No existe el usuario '{solicitud.DestinatarioNombreUsuario}'.");
 
-        return CreatedAtAction(nameof(ObtenerPorId), new { id = mensaje.Id }, mensaje);
+        return CreatedAtAction(nameof(ObtenerPorId), new { id = mensaje.Id }, MapeoMensaje.MapearA(mensaje));
     }
 
     /// <summary>Lista los mensajes que has enviado.</summary>
@@ -45,7 +46,8 @@ public class MensajesController : ControllerBase
         var usuarioId = User.ObtenerId();
         if (usuarioId is null) return Unauthorized();
 
-        return Ok(await _mensajes.ObtenerEnviadosAsync(usuarioId.Value));
+        var mensajes = await _mensajes.ObtenerEnviadosAsync(usuarioId.Value);
+        return Ok(MapeoMensaje.MapearA(mensajes));
     }
 
     /// <summary>Lee un mensaje. Solo su remitente o su destinatario pueden verlo (para los demás no existe).</summary>
@@ -61,7 +63,7 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.ObtenerMensajeAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no tienes acceso.");
 
-        return Ok(mensaje);
+        return Ok(MapeoMensaje.MapearA(mensaje));
     }
 
     /// <summary>Marca como leído un mensaje que recibiste. Solo el destinatario puede hacerlo.</summary>
@@ -77,6 +79,6 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.MarcarComoLeidoAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no eres su destinatario.");
 
-        return Ok(mensaje);
+        return Ok(MapeoMensaje.MapearA(mensaje));
     }
 }
