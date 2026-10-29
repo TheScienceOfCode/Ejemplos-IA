@@ -6,14 +6,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Mensajeria.Api.Servicios;
 
+// Los métodos que devuelven "?" dan null cuando no se encontró lo pedido o no pertenece al usuario.
 public interface IServicioMensajes
 {
-    Task<MensajeRespuesta> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud);
+    Task<MensajeRespuesta?> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud);
     Task<BuzonRespuesta> ObtenerMiBuzonAsync(int usuarioId);
-    Task<BuzonRespuesta> ObtenerBuzonPorIdAsync(int buzonId, int usuarioId);
+    Task<BuzonRespuesta?> ObtenerBuzonPorIdAsync(int buzonId, int usuarioId);
     Task<List<MensajeRespuesta>> ObtenerEnviadosAsync(int usuarioId);
-    Task<MensajeRespuesta> ObtenerMensajeAsync(int mensajeId, int usuarioId);
-    Task<MensajeRespuesta> MarcarComoLeidoAsync(int mensajeId, int usuarioId);
+    Task<MensajeRespuesta?> ObtenerMensajeAsync(int mensajeId, int usuarioId);
+    Task<MensajeRespuesta?> MarcarComoLeidoAsync(int mensajeId, int usuarioId);
 }
 
 /// <summary>
@@ -41,13 +42,12 @@ public class ServicioMensajes : IServicioMensajes
         CreadoEn = m.CreadoEn
     };
 
-    public async Task<MensajeRespuesta> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud)
+    public async Task<MensajeRespuesta?> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud)
     {
         var nombreDestino = solicitud.DestinatarioNombreUsuario.Trim();
 
         var buzonDestino = await _db.Buzones.FirstOrDefaultAsync(b => b.Usuario.NombreUsuario == nombreDestino);
-        if (buzonDestino is null)
-            throw new ExcepcionNegocio(StatusCodes.Status404NotFound, $"No existe el usuario '{nombreDestino}'.");
+        if (buzonDestino is null) return null;
 
         var mensaje = new Mensaje
         {
@@ -68,15 +68,11 @@ public class ServicioMensajes : IServicioMensajes
         return await ConstruirBuzonAsync(buzon.Id);
     }
 
-    public async Task<BuzonRespuesta> ObtenerBuzonPorIdAsync(int buzonId, int usuarioId)
+    public async Task<BuzonRespuesta?> ObtenerBuzonPorIdAsync(int buzonId, int usuarioId)
     {
-        var buzon = await _db.Buzones.FirstOrDefaultAsync(b => b.Id == buzonId);
-        if (buzon is null)
-            throw new ExcepcionNegocio(StatusCodes.Status404NotFound, "El buzón no existe.");
-
-        // Comparamos con el usuario del TOKEN: nadie puede abrir el buzón de otra persona
-        if (buzon.UsuarioId != usuarioId)
-            throw new ExcepcionNegocio(StatusCodes.Status403Forbidden, "Este buzón pertenece a otro usuario.");
+        // Filtramos por el usuario del TOKEN: el buzón de otra persona es como si no existiera
+        var buzon = await _db.Buzones.FirstOrDefaultAsync(b => b.Id == buzonId && b.UsuarioId == usuarioId);
+        if (buzon is null) return null;
 
         return await ConstruirBuzonAsync(buzon.Id);
     }
@@ -90,40 +86,24 @@ public class ServicioMensajes : IServicioMensajes
             .ToListAsync();
     }
 
-    public async Task<MensajeRespuesta> ObtenerMensajeAsync(int mensajeId, int usuarioId)
+    public async Task<MensajeRespuesta?> ObtenerMensajeAsync(int mensajeId, int usuarioId)
     {
-        var mensaje = await _db.Mensajes
-            .Include(m => m.Buzon)
-            .FirstOrDefaultAsync(m => m.Id == mensajeId);
-        if (mensaje is null)
-            throw new ExcepcionNegocio(StatusCodes.Status404NotFound, "El mensaje no existe.");
-
         // Solo pueden verlo quien lo envió y quien lo recibió
-        var esRemitente = mensaje.RemitenteId == usuarioId;
-        var esDestinatario = mensaje.Buzon.UsuarioId == usuarioId;
-        if (!esRemitente && !esDestinatario)
-            throw new ExcepcionNegocio(StatusCodes.Status403Forbidden, "No tienes acceso a este mensaje.");
-
-        return await _db.Mensajes.Where(m => m.Id == mensajeId).Select(ADto).SingleAsync();
+        return await _db.Mensajes
+            .Where(m => m.Id == mensajeId && (m.RemitenteId == usuarioId || m.Buzon.UsuarioId == usuarioId))
+            .Select(ADto)
+            .FirstOrDefaultAsync();
     }
 
-    public async Task<MensajeRespuesta> MarcarComoLeidoAsync(int mensajeId, int usuarioId)
+    public async Task<MensajeRespuesta?> MarcarComoLeidoAsync(int mensajeId, int usuarioId)
     {
-        var mensaje = await _db.Mensajes
-            .Include(m => m.Buzon)
-            .FirstOrDefaultAsync(m => m.Id == mensajeId);
-        if (mensaje is null)
-            throw new ExcepcionNegocio(StatusCodes.Status404NotFound, "El mensaje no existe.");
-
         // Solo el DESTINATARIO puede marcarlo como leído (ni siquiera el remitente)
-        if (mensaje.Buzon.UsuarioId != usuarioId)
-            throw new ExcepcionNegocio(StatusCodes.Status403Forbidden, "Solo el destinatario puede marcar el mensaje como leído.");
+        var mensaje = await _db.Mensajes
+            .FirstOrDefaultAsync(m => m.Id == mensajeId && m.Buzon.UsuarioId == usuarioId);
+        if (mensaje is null) return null;
 
-        if (!mensaje.EstaLeido)
-        {
-            mensaje.EstaLeido = true;
-            await _db.SaveChangesAsync();
-        }
+        mensaje.EstaLeido = true;
+        await _db.SaveChangesAsync();
 
         return await _db.Mensajes.Where(m => m.Id == mensajeId).Select(ADto).SingleAsync();
     }

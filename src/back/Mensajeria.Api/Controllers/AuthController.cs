@@ -26,6 +26,8 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Registro(RegistroSolicitud solicitud)
     {
         var usuario = await _auth.RegistrarAsync(solicitud);
+        if (usuario is null) return Conflict("El nombre de usuario o el correo ya están registrados.");
+
         return StatusCode(StatusCodes.Status201Created, usuario);
     }
 
@@ -36,6 +38,9 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(LoginSolicitud solicitud)
     {
-        return Ok(await _auth.LoginAsync(solicitud));
+        var token = await _auth.LoginAsync(solicitud);
+        if (token is null) return Unauthorized("Usuario o contraseña incorrectos.");
+
+        return Ok(token);
     }
 }

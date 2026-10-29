@@ -8,8 +8,10 @@ namespace Mensajeria.Api.Servicios;
 
 public interface IServicioAutenticacion
 {
-    Task<UsuarioRespuesta> RegistrarAsync(RegistroSolicitud solicitud);
-    Task<TokenRespuesta> LoginAsync(LoginSolicitud solicitud);
+    /// <summary>Devuelve null si el nombre o el correo ya existen.</summary>
+    Task<UsuarioRespuesta?> RegistrarAsync(RegistroSolicitud solicitud);
+    /// <summary>Devuelve null si el usuario o la contraseña son incorrectos.</summary>
+    Task<TokenRespuesta?> LoginAsync(LoginSolicitud solicitud);
 }
 
 public class ServicioAutenticacion : IServicioAutenticacion
@@ -26,14 +28,14 @@ public class ServicioAutenticacion : IServicioAutenticacion
         _hasher = hasher;
     }
 
-    public async Task<UsuarioRespuesta> RegistrarAsync(RegistroSolicitud solicitud)
+    public async /// <summary>Devuelve null si el nombre o el correo ya existen.</summary>
+    Task<UsuarioRespuesta?> RegistrarAsync(RegistroSolicitud solicitud)
     {
         var nombre = solicitud.NombreUsuario.Trim();
         var correo = solicitud.Correo.Trim();
 
         var yaExiste = await _db.Usuarios.AnyAsync(u => u.NombreUsuario == nombre || u.Correo == correo);
-        if (yaExiste)
-            throw new ExcepcionNegocio(StatusCodes.Status409Conflict, "El nombre de usuario o el correo ya están registrados.");
+        if (yaExiste) return null;
 
         var usuario = new Usuario { NombreUsuario = nombre, Correo = correo };
         usuario.HashContrasena = _hasher.HashPassword(usuario, solicitud.Contrasena);
@@ -41,15 +43,7 @@ public class ServicioAutenticacion : IServicioAutenticacion
         // El buzón se crea junto con el usuario; EF Core guarda ambos en una sola transacción.
         _db.Buzones.Add(new Buzon { Usuario = usuario });
 
-        try
-        {
-            await _db.SaveChangesAsync();
-        }
-        catch (DbUpdateException)
-        {
-            // Dos registros simultáneos con el mismo nombre: el índice único de la BD nos protege.
-            throw new ExcepcionNegocio(StatusCodes.Status409Conflict, "El nombre de usuario o el correo ya están registrados.");
-        }
+        await _db.SaveChangesAsync();
 
         return new UsuarioRespuesta
         {
@@ -60,7 +54,8 @@ public class ServicioAutenticacion : IServicioAutenticacion
         };
     }
 
-    public async Task<TokenRespuesta> LoginAsync(LoginSolicitud solicitud)
+    public async /// <summary>Devuelve null si el usuario o la contraseña son incorrectos.</summary>
+    Task<TokenRespuesta?> LoginAsync(LoginSolicitud solicitud)
     {
         var usuario = await _db.Usuarios.FirstOrDefaultAsync(u => u.NombreUsuario == solicitud.NombreUsuario.Trim());
 
@@ -69,8 +64,7 @@ public class ServicioAutenticacion : IServicioAutenticacion
             ? PasswordVerificationResult.Failed
             : _hasher.VerifyHashedPassword(usuario, usuario.HashContrasena, solicitud.Contrasena);
 
-        if (usuario is null || resultado == PasswordVerificationResult.Failed)
-            throw new ExcepcionNegocio(StatusCodes.Status401Unauthorized, "Usuario o contraseña incorrectos.");
+        if (usuario is null || resultado == PasswordVerificationResult.Failed) return null;
 
         var (token, expira) = _jwt.CrearToken(usuario);
         return new TokenRespuesta { Token = token, ExpiraEn = expira, NombreUsuario = usuario.NombreUsuario };

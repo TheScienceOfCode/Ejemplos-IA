@@ -26,10 +26,6 @@ builder.Services.AddScoped<IServicioMensajes, ServicioMensajes>();
 builder.Services.AddScoped<IServicioJwt, ServicioJwt>();
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
-// Manejo de errores de negocio (ExcepcionNegocio -> 404, 409, etc.)
-builder.Services.AddExceptionHandler<ManejadorExcepciones>();
-builder.Services.AddProblemDetails();
-
 // ---------- 2. Autenticación con JWT ----------
 
 var claveJwt = builder.Configuration["Jwt:Clave"];
@@ -120,7 +116,6 @@ using (var alcance = app.Services.CreateScope())
 
 // ---------- 5. Pipeline HTTP ----------
 
-app.UseExceptionHandler();
 app.UseSwagger();
 app.UseSwaggerUI(opciones => opciones.RoutePrefix = "swagger");
 app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();

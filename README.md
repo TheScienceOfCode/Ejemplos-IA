@@ -40,7 +40,7 @@ Los scripts son Bash. Los `verificar-*` usan además `curl`.
 6. Pulsa *Authorize → Logout*, haz login como Bob y autentícate con su token.
 7. `GET /api/buzon`: aparece el mensaje de Alice (anota su `id` y el `buzonId`).
 8. `GET /api/mensajes/{id}` para leerlo y `PUT /api/mensajes/{id}/leido` para marcarlo como leído.
-9. Autenticado como Alice, `GET /api/buzon/{buzonId}` con el buzón de Bob → **403**.
+9. Autenticado como Alice, `GET /api/buzon/{buzonId}` con el buzón de Bob → **404** (para Alice ese buzón no existe).
 
 ## Endpoints
 
@@ -50,12 +50,12 @@ Los scripts son Bash. Los `verificar-*` usan además `curl`.
 | `POST /api/auth/login` | Devuelve un token JWT |
 | `POST /api/mensajes` | Envía un mensaje a otro usuario |
 | `GET /api/buzon` | Mi buzón (mensajes recibidos) |
-| `GET /api/buzon/{buzonId}` | Un buzón por Id (403 si no es tuyo) |
+| `GET /api/buzon/{buzonId}` | Un buzón por Id (404 si no es tuyo) |
 | `GET /api/mensajes/enviados` | Mensajes que envié |
 | `GET /api/mensajes/{id}` | Leer un mensaje (solo remitente o destinatario) |
 | `PUT /api/mensajes/{id}/leido` | Marcar como leído (solo el destinatario) |
 
-Códigos: `400` datos inválidos · `401` sin token o login incorrecto · `403` recurso de otro usuario · `404` no existe · `409` usuario/correo repetido.
+Códigos: `400` datos inválidos · `401` sin token o login incorrecto · `404` no existe o no es tuyo · `409` usuario/correo repetido.
 
 ## Migraciones
 

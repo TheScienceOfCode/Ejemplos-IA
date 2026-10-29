@@ -48,9 +48,9 @@ public class PruebasAutorizacion : IClassFixture<FabricaApi>
         var buzonBob = (await bob.GetFromJsonAsync<BuzonRespuesta>("/api/buzon"))!;
         var buzonAlice = (await alice.GetFromJsonAsync<BuzonRespuesta>("/api/buzon"))!;
 
-        // Bob sí puede abrir el suyo por Id; Alice con el Id de Bob recibe 403
+        // Bob sí puede abrir el suyo por Id; Alice con el Id de Bob recibe 404 (para ella ese buzón no existe)
         Assert.Equal(HttpStatusCode.OK, (await bob.GetAsync($"/api/buzon/{buzonBob.BuzonId}")).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await alice.GetAsync($"/api/buzon/{buzonBob.BuzonId}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await alice.GetAsync($"/api/buzon/{buzonBob.BuzonId}")).StatusCode);
         Assert.NotEqual(buzonAlice.BuzonId, buzonBob.BuzonId);
         Assert.Equal(HttpStatusCode.NotFound, (await alice.GetAsync("/api/buzon/999999")).StatusCode);
     }
@@ -70,8 +70,8 @@ public class PruebasAutorizacion : IClassFixture<FabricaApi>
 
         var clienteIntruso = await _fabrica.ClienteComoAsync(intruso);
 
-        Assert.Equal(HttpStatusCode.Forbidden, (await clienteIntruso.GetAsync($"/api/mensajes/{mensaje.Id}")).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await clienteIntruso.PutAsync($"/api/mensajes/{mensaje.Id}/leido", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await clienteIntruso.GetAsync($"/api/mensajes/{mensaje.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await clienteIntruso.PutAsync($"/api/mensajes/{mensaje.Id}/leido", null)).StatusCode);
 
         // Y el mensaje sigue sin leer
         var bob = await _fabrica.ClienteComoAsync("Bob");
@@ -93,7 +93,7 @@ public class PruebasAutorizacion : IClassFixture<FabricaApi>
 
         var respuesta = await alice.PutAsync($"/api/mensajes/{mensaje.Id}/leido", null);
 
-        Assert.Equal(HttpStatusCode.Forbidden, respuesta.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, respuesta.StatusCode);
     }
 
     [Fact]

@@ -27,14 +27,16 @@ public class BuzonController : ControllerBase
         return Ok(await _mensajes.ObtenerMiBuzonAsync(User.ObtenerId()));
     }
 
-    /// <summary>Abre un buzón por su Id. Solo funciona si el buzón es tuyo; si es de otra persona responde 403.</summary>
+    /// <summary>Abre un buzón por su Id. Solo funciona si el buzón es tuyo; si es de otra persona responde 404.</summary>
     [HttpGet("{buzonId:int}")]
     [ProducesResponseType<BuzonRespuesta>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> BuzonPorId(int buzonId)
     {
-        return Ok(await _mensajes.ObtenerBuzonPorIdAsync(buzonId, User.ObtenerId()));
+        var buzon = await _mensajes.ObtenerBuzonPorIdAsync(buzonId, User.ObtenerId());
+        if (buzon is null) return NotFound("El buzón no existe o no es tuyo.");
+
+        return Ok(buzon);
     }
 }

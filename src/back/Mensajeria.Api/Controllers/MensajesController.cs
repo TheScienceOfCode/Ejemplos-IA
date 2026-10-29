@@ -27,6 +27,8 @@ public class MensajesController : ControllerBase
     public async Task<IActionResult> Enviar(EnviarMensajeSolicitud solicitud)
     {
         var mensaje = await _mensajes.EnviarAsync(User.ObtenerId(), solicitud);
+        if (mensaje is null) return NotFound($"No existe el usuario '{solicitud.DestinatarioNombreUsuario}'.");
+
         return CreatedAtAction(nameof(ObtenerPorId), new { id = mensaje.Id }, mensaje);
     }
 
@@ -39,25 +41,29 @@ public class MensajesController : ControllerBase
         return Ok(await _mensajes.ObtenerEnviadosAsync(User.ObtenerId()));
     }
 
-    /// <summary>Lee un mensaje. Solo su remitente o su destinatario pueden verlo.</summary>
+    /// <summary>Lee un mensaje. Solo su remitente o su destinatario pueden verlo (para los demás no existe).</summary>
     [HttpGet("{id:int}")]
     [ProducesResponseType<MensajeRespuesta>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
-        return Ok(await _mensajes.ObtenerMensajeAsync(id, User.ObtenerId()));
+        var mensaje = await _mensajes.ObtenerMensajeAsync(id, User.ObtenerId());
+        if (mensaje is null) return NotFound("El mensaje no existe o no tienes acceso.");
+
+        return Ok(mensaje);
     }
 
     /// <summary>Marca como leído un mensaje que recibiste. Solo el destinatario puede hacerlo.</summary>
     [HttpPut("{id:int}/leido")]
     [ProducesResponseType<MensajeRespuesta>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarcarComoLeido(int id)
     {
-        return Ok(await _mensajes.MarcarComoLeidoAsync(id, User.ObtenerId()));
+        var mensaje = await _mensajes.MarcarComoLeidoAsync(id, User.ObtenerId());
+        if (mensaje is null) return NotFound("El mensaje no existe o no eres su destinatario.");
+
+        return Ok(mensaje);
     }
 }

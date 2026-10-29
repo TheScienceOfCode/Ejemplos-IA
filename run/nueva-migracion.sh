@@ -5,9 +5,9 @@
 source "$(dirname "$0")/_comun.sh"
 
 NOMBRE="${1:?Uso: run/nueva-migracion.sh NombreDeLaMigracion}"
-docker run --rm -v "$RAIZ/src/back/Mensajeria.Api:/proyecto:Z" -w /proyecto \
+docker run --rm -e ASPNETCORE_ENVIRONMENT=Development -v "$RAIZ/src/back/Mensajeria.Api:/proyecto:Z" -w /proyecto \
   mcr.microsoft.com/dotnet/sdk:10.0 sh -c "
-    dotnet tool install --global dotnet-ef --version 10.0.14 >/dev/null &&
+    dotnet restore >/dev/null && dotnet tool install --global dotnet-ef --version 10.0.14 >/dev/null &&
     export PATH=\"\$PATH:/root/.dotnet/tools\" &&
     dotnet ef migrations add '$NOMBRE'"
 echo "Migración creada en src/back/Mensajeria.Api/Migrations (se aplicará sola al reiniciar la API)."
