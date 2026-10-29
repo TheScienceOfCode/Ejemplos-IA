@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 
-namespace Mensajeria.Api.Controllers;
+namespace Mensajeria.Api.Utilidades;
 
 public static class UsuarioActual
 {

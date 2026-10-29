@@ -13,7 +13,7 @@ src/back/     la API (Mensajeria.Api), sus pruebas (Mensajeria.Pruebas), Dockerf
 src/front/    (pendiente)
 ```
 
-Dentro de `src/back/Mensajeria.Api`: `Modelos/` (Usuario, Buzon, Mensaje) · `Datos/` (DbContext y datos de prueba) · `Servicios/` (lógica de negocio) · `Controllers/` · `Dtos/` · `Migrations/` · `Program.cs` (registro de dependencias y arranque).
+Dentro de `src/back/Mensajeria.Api`: `Modelos/` (Usuario, Buzon, Mensaje) · `Datos/` (DbContext y datos de prueba) · `Servicios/` (lógica de negocio) · `Controllers/` · `Dtos/` · `Utilidades/` · `Migrations/` · `Program.cs` (registro de dependencias y arranque).
 
 ## Comandos
 
@@ -38,9 +38,9 @@ Los scripts son Bash. Los `verificar-*` usan además `curl`.
 4. Botón **Authorize** → pega el token → *Authorize*.
 5. `POST /api/mensajes` con `destinatarioNombreUsuario: "Bob"`, un asunto y un contenido.
 6. Pulsa *Authorize → Logout*, haz login como Bob y autentícate con su token.
-7. `GET /api/buzon`: aparece el mensaje de Alice (anota su `id` y el `buzonId`).
+7. `GET /api/buzon`: aparece el mensaje de Alice (anota su `id`).
 8. `GET /api/mensajes/{id}` para leerlo y `PUT /api/mensajes/{id}/leido` para marcarlo como leído.
-9. Autenticado como Alice, `GET /api/buzon/{buzonId}` con el buzón de Bob → **404** (para Alice ese buzón no existe).
+9. Autenticado como Alice, `GET /api/buzon`: devuelve el buzón de Alice, sin el mensaje que era para Bob. El buzón siempre sale del token, nunca de un Id que envíe el cliente.
 
 ## Endpoints
 
@@ -50,7 +50,6 @@ Los scripts son Bash. Los `verificar-*` usan además `curl`.
 | `POST /api/auth/login` | Devuelve un token JWT |
 | `POST /api/mensajes` | Envía un mensaje a otro usuario |
 | `GET /api/buzon` | Mi buzón (mensajes recibidos) |
-| `GET /api/buzon/{buzonId}` | Un buzón por Id (404 si no es tuyo) |
 | `GET /api/mensajes/enviados` | Mensajes que envié |
 | `GET /api/mensajes/{id}` | Leer un mensaje (solo remitente o destinatario) |
 | `PUT /api/mensajes/{id}/leido` | Marcar como leído (solo el destinatario) |

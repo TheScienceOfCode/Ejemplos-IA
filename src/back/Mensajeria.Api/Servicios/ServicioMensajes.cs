@@ -11,7 +11,6 @@ public interface IServicioMensajes
 {
     Task<MensajeRespuesta?> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud);
     Task<BuzonRespuesta> ObtenerMiBuzonAsync(int usuarioId);
-    Task<BuzonRespuesta?> ObtenerBuzonPorIdAsync(int buzonId, int usuarioId);
     Task<List<MensajeRespuesta>> ObtenerEnviadosAsync(int usuarioId);
     Task<MensajeRespuesta?> ObtenerMensajeAsync(int mensajeId, int usuarioId);
     Task<MensajeRespuesta?> MarcarComoLeidoAsync(int mensajeId, int usuarioId);
@@ -65,15 +64,6 @@ public class ServicioMensajes : IServicioMensajes
     public async Task<BuzonRespuesta> ObtenerMiBuzonAsync(int usuarioId)
     {
         var buzon = await _db.Buzones.FirstAsync(b => b.UsuarioId == usuarioId);
-        return await ConstruirBuzonAsync(buzon.Id);
-    }
-
-    public async Task<BuzonRespuesta?> ObtenerBuzonPorIdAsync(int buzonId, int usuarioId)
-    {
-        // Filtramos por el usuario del TOKEN: el buzón de otra persona es como si no existiera
-        var buzon = await _db.Buzones.FirstOrDefaultAsync(b => b.Id == buzonId && b.UsuarioId == usuarioId);
-        if (buzon is null) return null;
-
         return await ConstruirBuzonAsync(buzon.Id);
     }
 

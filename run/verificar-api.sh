@@ -29,9 +29,7 @@ llamar GET "/api/mensajes/$ID" "$BOB";       esperar "Bob lee el mensaje" 200; c
 llamar PUT "/api/mensajes/$ID/leido" "$BOB"; esperar "Bob lo marca como leído" 200; contiene "Quedó leído" '"estaLeido":true'
 
 echo "== Autorización =="
-BUZON_BOB="$(curl -s -H "Authorization: Bearer $BOB" "$URL/api/buzon" | sed -n 's/.*"buzonId":\([0-9]*\).*/\1/p')"
-llamar GET "/api/buzon/$BUZON_BOB" "$ALICE";        esperar "Alice intenta abrir el buzón de Bob" 404
-llamar GET "/api/buzon/$BUZON_BOB" "$BOB";          esperar "Bob abre su propio buzón" 200
+llamar GET /api/buzon "$ALICE";                 esperar "Alice abre su buzón" 200; no_contiene "No ve el mensaje privado de Bob" "Hola $SUFIJO"
 llamar PUT "/api/mensajes/$ID/leido" "$ALICE";      esperar "Alice (remitente) intenta marcar como leído" 404
 CARLA="$(obtener_token "carla$SUFIJO" 123456)"
 llamar GET "/api/mensajes/$ID" "$CARLA";            esperar "Un tercero intenta leer el mensaje" 404

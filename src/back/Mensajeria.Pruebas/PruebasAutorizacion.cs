@@ -17,7 +17,6 @@ public class PruebasAutorizacion : IClassFixture<FabricaApi>
 
     [Theory]
     [InlineData("GET", "/api/buzon")]
-    [InlineData("GET", "/api/buzon/1")]
     [InlineData("GET", "/api/mensajes/enviados")]
     [InlineData("GET", "/api/mensajes/1")]
     [InlineData("PUT", "/api/mensajes/1/leido")]
@@ -41,18 +40,27 @@ public class PruebasAutorizacion : IClassFixture<FabricaApi>
     }
 
     [Fact]
-    public async Task Alice_NoPuedeAbrirElBuzonDeBob()
+    public async Task Alice_NoVeEnSuBuzonLosMensajesDeBob()
     {
         var alice = await _fabrica.ClienteComoAsync("Alice");
         var bob = await _fabrica.ClienteComoAsync("Bob");
-        var buzonBob = (await bob.GetFromJsonAsync<BuzonRespuesta>("/api/buzon"))!;
-        var buzonAlice = (await alice.GetFromJsonAsync<BuzonRespuesta>("/api/buzon"))!;
+        var asunto = "Solo para Bob " + Guid.NewGuid().ToString("N")[..8];
+        var envio = await alice.PostAsJsonAsync("/api/mensajes", new EnviarMensajeSolicitud
+        {
+            DestinatarioNombreUsuario = "Bob",
+            Asunto = asunto,
+            Contenido = "Privado"
+        });
+        Assert.Equal(HttpStatusCode.Created, envio.StatusCode);
 
-        // Bob sí puede abrir el suyo por Id; Alice con el Id de Bob recibe 404 (para ella ese buzón no existe)
-        Assert.Equal(HttpStatusCode.OK, (await bob.GetAsync($"/api/buzon/{buzonBob.BuzonId}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await alice.GetAsync($"/api/buzon/{buzonBob.BuzonId}")).StatusCode);
-        Assert.NotEqual(buzonAlice.BuzonId, buzonBob.BuzonId);
-        Assert.Equal(HttpStatusCode.NotFound, (await alice.GetAsync("/api/buzon/999999")).StatusCode);
+        // No hay forma de pedir el buzón de otro: cada quien solo obtiene el suyo, según su token
+        var buzonAlice = (await alice.GetFromJsonAsync<BuzonRespuesta>("/api/buzon"))!;
+        var buzonBob = (await bob.GetFromJsonAsync<BuzonRespuesta>("/api/buzon"))!;
+
+        Assert.Equal("Alice", buzonAlice.Propietario);
+        Assert.Equal("Bob", buzonBob.Propietario);
+        Assert.DoesNotContain(buzonAlice.Mensajes, m => m.Asunto == asunto);
+        Assert.Contains(buzonBob.Mensajes, m => m.Asunto == asunto);
     }
 
     [Fact]
