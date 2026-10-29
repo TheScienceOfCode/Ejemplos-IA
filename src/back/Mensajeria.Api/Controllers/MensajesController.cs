@@ -34,8 +34,7 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.EnviarAsync(usuarioId.Value, solicitud.DestinatarioNombreUsuario, solicitud.Asunto, solicitud.Contenido);
         if (mensaje is null) return NotFound($"No existe el usuario '{solicitud.DestinatarioNombreUsuario}'.");
 
-        var respuesta = MapeoMensaje.MapearA(mensaje);
-        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+        var respuesta = MapeoMensaje.Respuesta(mensaje);
 
         return CreatedAtAction(nameof(ObtenerPorId), new { id = mensaje.Id }, respuesta);
     }
@@ -50,8 +49,7 @@ public class MensajesController : ControllerBase
         if (usuarioId is null) return Unauthorized();
 
         var mensajes = await _mensajes.ObtenerEnviadosAsync(usuarioId.Value);
-        var respuesta = MapeoMensaje.MapearA(mensajes);
-        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+        var respuesta = MapeoMensaje.Respuesta(mensajes);
 
         return Ok(respuesta);
     }
@@ -69,8 +67,7 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.ObtenerMensajeAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no tienes acceso.");
 
-        var respuesta = MapeoMensaje.MapearA(mensaje);
-        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+        var respuesta = MapeoMensaje.Respuesta(mensaje);
 
         return Ok(respuesta);
     }
@@ -88,8 +85,7 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.MarcarComoLeidoAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no eres su destinatario.");
 
-        var respuesta = MapeoMensaje.MapearA(mensaje);
-        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+        var respuesta = MapeoMensaje.Respuesta(mensaje);
 
         return Ok(respuesta);
     }

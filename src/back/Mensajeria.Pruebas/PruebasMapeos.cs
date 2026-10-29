@@ -6,17 +6,17 @@ namespace Mensajeria.Pruebas;
 public class PruebasMapeos
 {
     [Fact]
-    public void Mensaje_Null_DevuelveNull()
+    public void Mensaje_Null_LanzaArgumentNullException()
     {
-        Assert.Null(MapeoMensaje.MapearA((Mensaje?)null));
+        Assert.Throws<ArgumentNullException>(() => MapeoMensaje.Respuesta((Mensaje)null!));
     }
 
     [Fact]
-    public void Mensaje_SinRemitenteNiBuzonCargados_DevuelveNull()
+    public void Mensaje_SinRemitenteNiBuzonCargados_LanzaArgumentNullException()
     {
         var mensaje = new Mensaje { Id = 1, Asunto = "Hola" }; // sin Include: las relaciones están vacías
 
-        Assert.Null(MapeoMensaje.MapearA(mensaje));
+        Assert.Throws<ArgumentNullException>(() => MapeoMensaje.Respuesta(mensaje));
     }
 
     [Fact]
@@ -31,36 +31,34 @@ public class PruebasMapeos
             Buzon = new Buzon { Usuario = new Usuario { NombreUsuario = "Bob" } }
         };
 
-        var dto = MapeoMensaje.MapearA(mensaje);
+        var dto = MapeoMensaje.Respuesta(mensaje);
 
-        Assert.NotNull(dto);
         Assert.Equal("Alice", dto.Remitente);
         Assert.Equal("Bob", dto.Destinatario);
     }
 
     [Fact]
-    public void Lista_ConUnMensajeIncompleto_DevuelveNull()
+    public void Lista_ConUnMensajeIncompleto_LanzaArgumentNullException()
     {
         var incompleto = new Mensaje { Id = 1 };
 
-        Assert.Null(MapeoMensaje.MapearA(new List<Mensaje> { incompleto }));
+        Assert.Throws<ArgumentNullException>(() => MapeoMensaje.Respuesta(new List<Mensaje> { incompleto }));
     }
 
     [Fact]
-    public void Buzon_SinUsuarioCargado_DevuelveNull()
+    public void Buzon_SinUsuarioCargado_LanzaArgumentNullException()
     {
-        Assert.Null(MapeoBuzon.MapearA(new Buzon { Id = 1 }));
-        Assert.Null(MapeoBuzon.MapearA(null));
+        Assert.Throws<ArgumentNullException>(() => MapeoBuzon.Respuesta(new Buzon { Id = 1 }));
+        Assert.Throws<ArgumentNullException>(() => MapeoBuzon.Respuesta(null!));
     }
 
     [Fact]
     public void Usuario_NoCopiaElHashDeLaContrasena()
     {
-        var dto = MapeoUsuario.MapearA(new Usuario { NombreUsuario = "Alice", HashContrasena = "secreto" });
+        var dto = MapeoUsuario.Respuesta(new Usuario { NombreUsuario = "Alice", HashContrasena = "secreto" });
 
-        Assert.NotNull(dto);
         Assert.DoesNotContain("secreto", System.Text.Json.JsonSerializer.Serialize(dto));
-        Assert.Null(MapeoUsuario.MapearA(null));
-        Assert.Null(MapeoUsuario.MapearA(new Usuario(), "", DateTime.UtcNow));
+        Assert.Throws<ArgumentNullException>(() => MapeoUsuario.Respuesta(null!));
+        Assert.Throws<ArgumentNullException>(() => MapeoUsuario.RespuestaToken(new Usuario(), "", DateTime.UtcNow));
     }
 }

@@ -30,8 +30,7 @@ public class BuzonController : ControllerBase
         if (usuarioId is null) return Unauthorized();
 
         var buzon = await _mensajes.ObtenerBuzonPorUsuarioIdAsync(usuarioId.Value);
-        var respuesta = MapeoBuzon.MapearA(buzon);
-        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+        var respuesta = MapeoBuzon.Respuesta(buzon);
 
         return Ok(respuesta);
     }

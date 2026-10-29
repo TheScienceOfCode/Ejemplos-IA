@@ -5,15 +5,13 @@ namespace Mensajeria.Api.Mapeos;
 
 public static class MapeoMensaje
 {
-    /// <summary>
-    /// Devuelve null si el mensaje es null o si no trae cargados el remitente y el destinatario
-    /// (es decir, si faltó un Include en la consulta del servicio).
-    /// </summary>
-    public static MensajeRespuesta? MapearA(Mensaje? mensaje)
+    /// <summary>Convierte un Mensaje en su DTO. Necesita el Remitente y el Buzon.Usuario cargados (Include).</summary>
+    public static MensajeRespuesta Respuesta(Mensaje mensaje)
     {
-        if (mensaje is null) return null;
-        if (mensaje.Remitente is null) return null;
-        if (mensaje.Buzon is null || mensaje.Buzon.Usuario is null) return null;
+        if (mensaje is null) throw new ArgumentNullException(nameof(mensaje));
+        if (mensaje.Remitente is null) throw new ArgumentNullException(nameof(mensaje.Remitente), "Falta cargar el remitente del mensaje.");
+        if (mensaje.Buzon is null) throw new ArgumentNullException(nameof(mensaje.Buzon), "Falta cargar el buzón del mensaje.");
+        if (mensaje.Buzon.Usuario is null) throw new ArgumentNullException(nameof(mensaje.Buzon.Usuario), "Falta cargar el usuario del buzón.");
 
         return new MensajeRespuesta
         {
@@ -27,18 +25,13 @@ public static class MapeoMensaje
         };
     }
 
-    /// <summary>Devuelve null si la lista es null o si algún mensaje no se pudo mapear.</summary>
-    public static List<MensajeRespuesta>? MapearA(List<Mensaje>? mensajes)
+    public static List<MensajeRespuesta> Respuesta(List<Mensaje> mensajes)
     {
-        if (mensajes is null) return null;
+        if (mensajes is null) throw new ArgumentNullException(nameof(mensajes));
 
         var respuesta = new List<MensajeRespuesta>();
         foreach (var mensaje in mensajes)
-        {
-            var mapeado = MapearA(mensaje);
-            if (mapeado is null) return null;
-            respuesta.Add(mapeado);
-        }
+            respuesta.Add(Respuesta(mensaje));
         return respuesta;
     }
 }

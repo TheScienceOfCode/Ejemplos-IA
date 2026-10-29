@@ -5,17 +5,14 @@ namespace Mensajeria.Api.Mapeos;
 
 public static class MapeoBuzon
 {
-    /// <summary>
-    /// Devuelve null si el buzón es null o si no trae cargados su usuario y sus mensajes recibidos
-    /// (es decir, si faltó un Include en la consulta del servicio).
-    /// </summary>
-    public static BuzonRespuesta? MapearA(Buzon? buzon)
+    /// <summary>Convierte un Buzon en su DTO. Necesita el Usuario y los MensajesRecibidos cargados (Include).</summary>
+    public static BuzonRespuesta Respuesta(Buzon buzon)
     {
-        if (buzon is null) return null;
-        if (buzon.Usuario is null) return null;
+        if (buzon is null) throw new ArgumentNullException(nameof(buzon));
+        if (buzon.Usuario is null) throw new ArgumentNullException(nameof(buzon.Usuario), "Falta cargar el usuario del buzón.");
+        if (buzon.MensajesRecibidos is null) throw new ArgumentNullException(nameof(buzon.MensajesRecibidos), "Faltan cargar los mensajes del buzón.");
 
-        var mensajes = MapeoMensaje.MapearA(buzon.MensajesRecibidos);
-        if (mensajes is null) return null;
+        var mensajes = MapeoMensaje.Respuesta(buzon.MensajesRecibidos);
 
         return new BuzonRespuesta
         {

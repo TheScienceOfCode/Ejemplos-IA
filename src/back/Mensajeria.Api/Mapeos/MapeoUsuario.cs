@@ -5,10 +5,10 @@ namespace Mensajeria.Api.Mapeos;
 
 public static class MapeoUsuario
 {
-    /// <summary>Convierte un Usuario en su DTO (el hash de la contraseña no se copia). Devuelve null si el usuario es null.</summary>
-    public static UsuarioRespuesta? MapearA(Usuario? usuario)
+    /// <summary>Convierte un Usuario en su DTO. El hash de la contraseña no se copia.</summary>
+    public static UsuarioRespuesta Respuesta(Usuario usuario)
     {
-        if (usuario is null) return null;
+        if (usuario is null) throw new ArgumentNullException(nameof(usuario));
 
         return new UsuarioRespuesta
         {
@@ -19,10 +19,11 @@ public static class MapeoUsuario
         };
     }
 
-    /// <summary>Arma la respuesta del login. Devuelve null si falta el usuario o el token.</summary>
-    public static TokenRespuesta? MapearA(Usuario? usuario, string? token, DateTime expiraEn)
+    /// <summary>Arma la respuesta del login.</summary>
+    public static TokenRespuesta RespuestaToken(Usuario usuario, string token, DateTime expiraEn)
     {
-        if (usuario is null || string.IsNullOrEmpty(token)) return null;
+        if (usuario is null) throw new ArgumentNullException(nameof(usuario));
+        if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(nameof(token));
 
         return new TokenRespuesta
         {

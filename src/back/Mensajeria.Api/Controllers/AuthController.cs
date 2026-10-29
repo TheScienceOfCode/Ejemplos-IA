@@ -31,8 +31,7 @@ public class AuthController : ControllerBase
         var usuario = await _auth.RegistrarAsync(solicitud.NombreUsuario, solicitud.Correo, solicitud.Contrasena);
         if (usuario is null) return Conflict("El nombre de usuario o el correo ya están registrados.");
 
-        var respuesta = MapeoUsuario.MapearA(usuario);
-        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+        var respuesta = MapeoUsuario.Respuesta(usuario);
 
         return StatusCode(StatusCodes.Status201Created, respuesta);
     }
@@ -48,8 +47,7 @@ public class AuthController : ControllerBase
         if (usuario is null) return Unauthorized("Usuario o contraseña incorrectos.");
 
         var (token, expiraEn) = _jwt.CrearToken(usuario);
-        var respuesta = MapeoUsuario.MapearA(usuario, token, expiraEn);
-        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+        var respuesta = MapeoUsuario.RespuestaToken(usuario, token, expiraEn);
 
         return Ok(respuesta);
     }
