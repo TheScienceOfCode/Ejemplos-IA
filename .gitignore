@@ -1,0 +1,16 @@
+# Salida de .NET
+**/obj/
+src/**/bin/
+
+# Carpeta bin/ de la raíz: salida generada
+/bin/*
+!/bin/.gitkeep
+
+*.db
+*.db-shm
+*.db-wal
+
+.vs/
+.idea/
+.vscode/
+*.user
