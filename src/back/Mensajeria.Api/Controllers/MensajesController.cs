@@ -34,7 +34,10 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.EnviarAsync(usuarioId.Value, solicitud.DestinatarioNombreUsuario, solicitud.Asunto, solicitud.Contenido);
         if (mensaje is null) return NotFound($"No existe el usuario '{solicitud.DestinatarioNombreUsuario}'.");
 
-        return CreatedAtAction(nameof(ObtenerPorId), new { id = mensaje.Id }, MapeoMensaje.MapearA(mensaje));
+        var respuesta = MapeoMensaje.MapearA(mensaje);
+        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+
+        return CreatedAtAction(nameof(ObtenerPorId), new { id = mensaje.Id }, respuesta);
     }
 
     /// <summary>Lista los mensajes que has enviado.</summary>
@@ -47,7 +50,10 @@ public class MensajesController : ControllerBase
         if (usuarioId is null) return Unauthorized();
 
         var mensajes = await _mensajes.ObtenerEnviadosAsync(usuarioId.Value);
-        return Ok(MapeoMensaje.MapearA(mensajes));
+        var respuesta = MapeoMensaje.MapearA(mensajes);
+        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+
+        return Ok(respuesta);
     }
 
     /// <summary>Lee un mensaje. Solo su remitente o su destinatario pueden verlo (para los demás no existe).</summary>
@@ -63,7 +69,10 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.ObtenerMensajeAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no tienes acceso.");
 
-        return Ok(MapeoMensaje.MapearA(mensaje));
+        var respuesta = MapeoMensaje.MapearA(mensaje);
+        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+
+        return Ok(respuesta);
     }
 
     /// <summary>Marca como leído un mensaje que recibiste. Solo el destinatario puede hacerlo.</summary>
@@ -79,6 +88,9 @@ public class MensajesController : ControllerBase
         var mensaje = await _mensajes.MarcarComoLeidoAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no eres su destinatario.");
 
-        return Ok(MapeoMensaje.MapearA(mensaje));
+        var respuesta = MapeoMensaje.MapearA(mensaje);
+        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+
+        return Ok(respuesta);
     }
 }

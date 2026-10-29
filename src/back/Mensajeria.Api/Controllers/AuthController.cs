@@ -31,7 +31,10 @@ public class AuthController : ControllerBase
         var usuario = await _auth.RegistrarAsync(solicitud.NombreUsuario, solicitud.Correo, solicitud.Contrasena);
         if (usuario is null) return Conflict("El nombre de usuario o el correo ya están registrados.");
 
-        return StatusCode(StatusCodes.Status201Created, MapeoUsuario.MapearA(usuario));
+        var respuesta = MapeoUsuario.MapearA(usuario);
+        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+
+        return StatusCode(StatusCodes.Status201Created, respuesta);
     }
 
     /// <summary>Inicia sesión y devuelve un token JWT para usar en el botón "Authorize" de Swagger.</summary>
@@ -45,6 +48,9 @@ public class AuthController : ControllerBase
         if (usuario is null) return Unauthorized("Usuario o contraseña incorrectos.");
 
         var (token, expiraEn) = _jwt.CrearToken(usuario);
-        return Ok(MapeoUsuario.MapearA(usuario, token, expiraEn));
+        var respuesta = MapeoUsuario.MapearA(usuario, token, expiraEn);
+        if (respuesta is null) return Problem("No se pudo construir la respuesta.");
+
+        return Ok(respuesta);
     }
 }
