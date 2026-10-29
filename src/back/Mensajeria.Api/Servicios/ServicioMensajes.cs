@@ -6,16 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Mensajeria.Api.Servicios;
 
-// Los métodos que devuelven "?" dan null cuando no se encontró lo pedido o no pertenece al usuario.
-public interface IServicioMensajes
-{
-    Task<MensajeRespuesta?> EnviarAsync(int remitenteId, EnviarMensajeSolicitud solicitud);
-    Task<BuzonRespuesta> ObtenerMiBuzonAsync(int usuarioId);
-    Task<List<MensajeRespuesta>> ObtenerEnviadosAsync(int usuarioId);
-    Task<MensajeRespuesta?> ObtenerMensajeAsync(int mensajeId, int usuarioId);
-    Task<MensajeRespuesta?> MarcarComoLeidoAsync(int mensajeId, int usuarioId);
-}
-
 /// <summary>
 /// Lógica de mensajería. Todos los métodos reciben el Id del usuario autenticado
 /// (sacado del token) para comprobar que solo se accede a lo que le pertenece.
@@ -61,7 +51,7 @@ public class ServicioMensajes : IServicioMensajes
         return await _db.Mensajes.Where(m => m.Id == mensaje.Id).Select(ADto).SingleAsync();
     }
 
-    public async Task<BuzonRespuesta> ObtenerMiBuzonAsync(int usuarioId)
+    public async Task<BuzonRespuesta> ObtenerBuzonPorUsuarioIdAsync(int usuarioId)
     {
         var buzon = await _db.Buzones.FirstAsync(b => b.UsuarioId == usuarioId);
         return await ConstruirBuzonAsync(buzon.Id);

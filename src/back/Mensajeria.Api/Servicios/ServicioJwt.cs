@@ -5,11 +5,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Mensajeria.Api.Servicios;
 
-public interface IServicioJwt
-{
-    (string Token, DateTime ExpiraEn) CrearToken(Usuario usuario);
-}
-
 /// <summary>Crea los tokens JWT con la clave configurada en "Jwt:Clave".</summary>
 public class ServicioJwt : IServicioJwt
 {

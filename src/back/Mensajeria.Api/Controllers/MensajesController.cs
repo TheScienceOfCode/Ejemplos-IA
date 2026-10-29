@@ -27,7 +27,10 @@ public class MensajesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Enviar(EnviarMensajeSolicitud solicitud)
     {
-        var mensaje = await _mensajes.EnviarAsync(User.ObtenerId(), solicitud);
+        var usuarioId = User.ObtenerId();
+        if (usuarioId is null) return Unauthorized();
+
+        var mensaje = await _mensajes.EnviarAsync(usuarioId.Value, solicitud);
         if (mensaje is null) return NotFound($"No existe el usuario '{solicitud.DestinatarioNombreUsuario}'.");
 
         return CreatedAtAction(nameof(ObtenerPorId), new { id = mensaje.Id }, mensaje);
@@ -39,7 +42,10 @@ public class MensajesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Enviados()
     {
-        return Ok(await _mensajes.ObtenerEnviadosAsync(User.ObtenerId()));
+        var usuarioId = User.ObtenerId();
+        if (usuarioId is null) return Unauthorized();
+
+        return Ok(await _mensajes.ObtenerEnviadosAsync(usuarioId.Value));
     }
 
     /// <summary>Lee un mensaje. Solo su remitente o su destinatario pueden verlo (para los demás no existe).</summary>
@@ -49,7 +55,10 @@ public class MensajesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ObtenerPorId(int id)
     {
-        var mensaje = await _mensajes.ObtenerMensajeAsync(id, User.ObtenerId());
+        var usuarioId = User.ObtenerId();
+        if (usuarioId is null) return Unauthorized();
+
+        var mensaje = await _mensajes.ObtenerMensajeAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no tienes acceso.");
 
         return Ok(mensaje);
@@ -62,7 +71,10 @@ public class MensajesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarcarComoLeido(int id)
     {
-        var mensaje = await _mensajes.MarcarComoLeidoAsync(id, User.ObtenerId());
+        var usuarioId = User.ObtenerId();
+        if (usuarioId is null) return Unauthorized();
+
+        var mensaje = await _mensajes.MarcarComoLeidoAsync(id, usuarioId.Value);
         if (mensaje is null) return NotFound("El mensaje no existe o no eres su destinatario.");
 
         return Ok(mensaje);

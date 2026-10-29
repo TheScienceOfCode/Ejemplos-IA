@@ -25,6 +25,9 @@ public class BuzonController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> MiBuzon()
     {
-        return Ok(await _mensajes.ObtenerMiBuzonAsync(User.ObtenerId()));
+        var usuarioId = User.ObtenerId();
+        if (usuarioId is null) return Unauthorized();
+
+        return Ok(await _mensajes.ObtenerBuzonPorUsuarioIdAsync(usuarioId.Value));
     }
 }
