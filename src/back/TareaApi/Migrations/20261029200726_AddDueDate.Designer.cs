@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TodoApi;
+using TareaApi;
 
 #nullable disable
 
-namespace TodoApi.Migrations
+namespace TareaApi.Migrations
 {
-    [DbContext(typeof(TodoContext))]
+    [DbContext(typeof(TareaContext))]
     [Migration("20261029200726_AddDueDate")]
     partial class AddDueDate
     {
@@ -20,7 +20,7 @@ namespace TodoApi.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
-            modelBuilder.Entity("TodoApi.Models.Todo", b =>
+            modelBuilder.Entity("TareaApi.Models.Tarea", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -42,7 +42,7 @@ namespace TodoApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Todos");
+                    b.ToTable("Tareas");
                 });
 #pragma warning restore 612, 618
         }

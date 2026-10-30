@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TodoApi.Migrations
+namespace TareaApi.Migrations
 {
     /// <inheritdoc />
     public partial class AddDueDate : Migration
@@ -13,7 +13,7 @@ namespace TodoApi.Migrations
         {
             migrationBuilder.AddColumn<DateTime>(
                 name: "DueDate",
-                table: "Todos",
+                table: "Tareas",
                 type: "TEXT",
                 nullable: true);
         }
@@ -23,7 +23,7 @@ namespace TodoApi.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "DueDate",
-                table: "Todos");
+                table: "Tareas");
         }
     }
 }

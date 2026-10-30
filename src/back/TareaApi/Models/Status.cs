@@ -1,4 +1,4 @@
-namespace TodoApi.Models;
+namespace TareaApi.Models;
 
 public enum Status
 {

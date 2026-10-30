@@ -1,11 +1,11 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using TodoApi;
+using TareaApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("Default") ?? "Data Source=todos.db";
-builder.Services.AddDbContext<TodoContext>(options => options.UseSqlite(connectionString));
+var connectionString = builder.Configuration.GetConnectionString("Default") ?? "Data Source=tareas.db";
+builder.Services.AddDbContext<TareaContext>(options => options.UseSqlite(connectionString));
 
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
@@ -17,7 +17,7 @@ var app = builder.Build();
 // Aplica las migraciones pendientes al arrancar
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<TodoContext>().Database.Migrate();
+    scope.ServiceProvider.GetRequiredService<TareaContext>().Database.Migrate();
 }
 
 app.UseSwagger();

@@ -1,6 +1,6 @@
-namespace TodoApi.Models;
+namespace TareaApi.Models;
 
-public class Todo
+public class Tarea
 {
     public int Id { get; set; }
     public string Title { get; set; } = "";
